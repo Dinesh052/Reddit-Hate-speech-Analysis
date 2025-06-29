@@ -1,5 +1,30 @@
+RedditAPI:
+  client_id: "your_reddit_client_id"
+  client_secret: "your_reddit_client_secret"
+  user_agent: "your_app_user_agent"
+  username: "your_reddit_username"
+  password: "your_reddit_password"
+  subreddit: "all"
+  topic: "Apple"
+
 NewsAPI:
-  topic: Apple
+  api_key: "your_newsapi_key"
+  topic: "Apple"
 
 TwitterAPI:
-  topic: Apple
+  api_key: "your_twitter_api_key"
+  api_secret: "your_twitter_api_secret"
+  access_token: "your_twitter_access_token"
+  access_token_secret: "your_twitter_access_token_secret"
+  topic: "Apple"
+
+Kafka:
+  host: "localhost"
+  port: 9092
+  reddit_topic: "reddit_topic"
+  news_topic: "news_topic"
+
+Elasticsearch:
+  host: "localhost"
+  port: 9200
+  index: "reddit_hate"

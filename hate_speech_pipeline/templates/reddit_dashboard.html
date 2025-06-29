@@ -2,128 +2,1204 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Reddit Hate Speech Dashboard</title>
-    <link href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reddit Hate Speech Analytics Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
-        body { font-family: 'Roboto', Arial, sans-serif; margin: 0; background: #23272f; color: #f4f4f4; }
-        header { background: #b71c1c; padding: 1.5em 2em; text-align: center; box-shadow: 0 2px 8px #0002; }
-        h1 { margin: 0; font-size: 2.5em; letter-spacing: 2px; color: #fff; }
-        .container { max-width: 1200px; margin: 2em auto; padding: 2em; background: #292d36; border-radius: 16px; box-shadow: 0 4px 24px #0004; }
-        .section { margin-bottom: 2.5em; }
-        .flex { display: flex; gap: 2em; }
-        .card { background: #23272f; border-radius: 12px; box-shadow: 0 2px 8px #0002; padding: 1.5em; flex: 1; }
-        table { border-collapse: collapse; width: 100%; background: transparent; }
-        th, td { border: none; padding: 10px 8px; text-align: left; }
-        th { background: #b71c1c; color: #fff; font-weight: 700; border-radius: 6px 6px 0 0; }
-        tr { background: #23272f; transition: background 0.2s; }
-        tr:hover { background: #33384a; }
-        tr:nth-child(even) { background: #292d36; }
-        .leaderboard th, .swears th, .subreddits th { background: #23272f; color: #b71c1c; border-bottom: 2px solid #b71c1c; }
-        .tag { display: inline-block; background: #b71c1c; color: #fff; border-radius: 8px; padding: 2px 10px; font-size: 0.9em; margin-right: 4px; }
-        .user { font-weight: 700; color: #ffb300; }
-        .swear { color: #ff5252; font-weight: 700; }
-        .subreddit { color: #64b5f6; font-weight: 700; }
-        .scroll-table { max-height: 350px; overflow-y: auto; display: block; }
-        .icon { margin-right: 6px; }
-        @media (max-width: 900px) {
-            .flex { flex-direction: column; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-bg: #0d1117;
+            --secondary-bg: #161b22;
+            --tertiary-bg: #21262d;
+            --accent-bg: #30363d;
+            --primary-text: #f0f6fc;
+            --secondary-text: #8b949e;
+            --accent-color: #ff6b6b;
+            --success-color: #238636;
+            --warning-color: #d29922;
+            --danger-color: #da3633;
+            --info-color: #1f6feb;
+            --border-color: #30363d;
+            --hover-bg: #262c36;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--primary-bg);
+            color: var(--primary-text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--secondary-bg) 0%, var(--tertiary-bg) 100%);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--tertiary-bg);
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success-color);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .dashboard-section {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .dashboard-section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-text);
+        }
+
+        .section-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .control-btn {
+            padding: 0.25rem 0.5rem;
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--secondary-text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.8rem;
+        }
+
+        .control-btn:hover {
+            background: var(--accent-bg);
+            color: var(--primary-text);
+        }
+
+        .control-btn.active {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: scale(1.05);
+            background: var(--accent-bg);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--secondary-text);
+            margin-top: 0.25rem;
+        }
+
+        .posts-container {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 1rem;
+        }
+
+        .post-item {
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .post-item:hover {
+            background: var(--accent-bg);
+            transform: translateX(5px);
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .post-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.8rem;
+            color: var(--secondary-text);
+        }
+
+        .post-content {
+            margin: 0.5rem 0;
+            line-height: 1.5;
+        }
+
+        .post-title {
+            font-weight: 600;
+            color: var(--primary-text);
+            margin-bottom: 0.25rem;
+        }
+
+        .post-description {
+            color: var(--secondary-text);
+            font-size: 0.9rem;
+        }
+
+        .tags {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .tag {
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        .tag.hate {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .tag.offensive {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        .tag.normal {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .tag.positive {
+            background: var(--info-color);
+            color: white;
+        }
+
+        .tag.negative {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .tag.neutral {
+            background: var(--secondary-text);
+            color: white;
+        }
+
+        .swear-word {
+            background: var(--danger-color);
+            color: white;
+            padding: 0.1rem 0.3rem;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .user-mention {
+            color: var(--info-color);
+            font-weight: 600;
+        }
+
+        .subreddit-mention {
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            color: var(--secondary-text);
+        }
+
+        .spinner {
+            border: 2px solid var(--border-color);
+            border-top: 2px solid var(--accent-color);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .filter-label {
+            font-size: 0.8rem;
+            color: var(--secondary-text);
+            font-weight: 500;
+        }
+
+        .filter-select {
+            padding: 0.5rem;
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--primary-text);
+            font-size: 0.9rem;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .real-time-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--success-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            z-index: 1001;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1><i class="fab fa-reddit icon"></i>Reddit Hate Speech Dashboard</h1>
-    </header>
-    <div class="container">
-        <div class="section">
-            <h2><i class="fa fa-bolt icon"></i> Live Reddit Posts</h2>
-            <div class="scroll-table">
-            <table id="posts">
-                <thead>
-                    <tr><th>Time</th><th>Subreddit</th><th>User</th><th>Title</th><th>Description</th></tr>
-                </thead>
-                <tbody></tbody>
-            </table>
+    <div class="real-time-indicator" id="realTimeIndicator">
+        <i class="fas fa-circle" style="animation: pulse 1s infinite;"></i>
+        Live Data
+    </div>
+
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fab fa-reddit"></i>
+                Reddit Hate Speech Analytics
+            </div>
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span>System Active</span>
             </div>
         </div>
-        <div class="section flex">
-            <div class="card leaderboard">
-                <h2><i class="fa fa-crown icon"></i>Top Swearing Users</h2>
-                <div class="scroll-table">
-                <table id="users">
-                    <thead><tr><th>User</th><th>Swear Count</th></tr></thead>
-                    <tbody></tbody>
-                </table>
+    </header>
+
+    <div class="main-container">
+        <!-- Real-time Statistics -->
+        <div class="dashboard-section full-width">
+            <div class="section-header">
+                <div class="section-title">
+                    <i class="fas fa-chart-line"></i>
+                    Real-time Analytics
+                </div>
+                <div class="section-controls">
+                    <button class="control-btn active" onclick="toggleTimeRange('1h')">1H</button>
+                    <button class="control-btn" onclick="toggleTimeRange('6h')">6H</button>
+                    <button class="control-btn" onclick="toggleTimeRange('24h')">24H</button>
                 </div>
             </div>
-            <div class="card swears">
-                <h2><i class="fa fa-skull-crossbones icon"></i>Most Used Swear Words</h2>
-                <div class="scroll-table">
-                <table id="swears">
-                    <thead><tr><th>Word</th><th>Count</th></tr></thead>
-                    <tbody></tbody>
-                </table>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-value" id="totalPosts">0</span>
+                    <div class="stat-label">Total Posts</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="hatePosts">0</span>
+                    <div class="stat-label">Hate Speech</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="offensivePosts">0</span>
+                    <div class="stat-label">Offensive</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="normalPosts">0</span>
+                    <div class="stat-label">Normal</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="avgSentiment">0.0</span>
+                    <div class="stat-label">Avg Sentiment</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="activeSubreddits">0</span>
+                    <div class="stat-label">Subreddits</div>
                 </div>
             </div>
-            <div class="card subreddits">
-                <h2><i class="fa fa-hashtag icon"></i>Top Subreddits</h2>
-                <div class="scroll-table">
-                <table id="subreddits">
-                    <thead><tr><th>Subreddit</th><th>Posts</th></tr></thead>
-                    <tbody></tbody>
-                </table>
+            <div class="chart-container">
+                <canvas id="timeSeriesChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Hate Speech Distribution -->
+        <div class="dashboard-section">
+            <div class="section-header">
+                <div class="section-title">
+                    <i class="fas fa-chart-pie"></i>
+                    Hate Speech Distribution
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="hateDistributionChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Sentiment Analysis -->
+        <div class="dashboard-section">
+            <div class="section-header">
+                <div class="section-title">
+                    <i class="fas fa-heart"></i>
+                    Sentiment Analysis
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="sentimentChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Top Subreddits -->
+        <div class="dashboard-section">
+            <div class="section-header">
+                <div class="section-title">
+                    <i class="fas fa-hashtag"></i>
+                    Top Subreddits
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="subredditChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Most Used Swear Words -->
+        <div class="dashboard-section">
+            <div class="section-header">
+                <div class="section-title">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Most Used Swear Words
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="swearWordsChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Live Posts Feed -->
+        <div class="dashboard-section full-width">
+            <div class="section-header">
+                <div class="section-title">
+                    <i class="fas fa-stream"></i>
+                    Live Posts Feed
+                </div>
+                <div class="section-controls">
+                    <button class="control-btn active" onclick="toggleFilter('all')">All</button>
+                    <button class="control-btn" onclick="toggleFilter('hate')">Hate</button>
+                    <button class="control-btn" onclick="toggleFilter('offensive')">Offensive</button>
+                    <button class="control-btn" onclick="toggleFilter('normal')">Normal</button>
+                </div>
+            </div>
+            <div class="filters">
+                <div class="filter-group">
+                    <label class="filter-label">Subreddit</label>
+                    <select class="filter-select" id="subredditFilter">
+                        <option value="all">All Subreddits</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Sentiment</label>
+                    <select class="filter-select" id="sentimentFilter">
+                        <option value="all">All Sentiments</option>
+                        <option value="positive">Positive</option>
+                        <option value="negative">Negative</option>
+                        <option value="neutral">Neutral</option>
+                    </select>
+                </div>
+            </div>
+            <div class="posts-container" id="postsContainer">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Loading posts...
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Move the script block to the end of the body for Chart.js availability -->
     <script>
+        // Global variables
+        let posts = [];
+        let charts = {};
+        let currentFilter = 'all';
+        let currentTimeRange = '1h';
+        const swearWords = ["fuck", "shit", "bitch", "asshole", "bastard", "damn", "crap", "dick", "piss", "slut", "whore", "fag", "cunt", "bollocks", "bugger", "arse", "wanker", "prick", "twat", "slag"];
+
+        // Initialize charts
+        function initializeCharts() {
+            // Time Series Chart
+            const timeSeriesCtx = document.getElementById('timeSeriesChart').getContext('2d');
+            charts.timeSeries = new Chart(timeSeriesCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Hate Speech',
+                        data: [],
+                        borderColor: '#da3633',
+                        backgroundColor: 'rgba(218, 54, 51, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'Offensive',
+                        data: [],
+                        borderColor: '#d29922',
+                        backgroundColor: 'rgba(210, 153, 34, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'Normal',
+                        data: [],
+                        borderColor: '#238636',
+                        backgroundColor: 'rgba(35, 134, 54, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#8b949e' }
+                        }
+                    },
+                    scales: {
+                        x: { 
+                            ticks: { color: '#8b949e' },
+                            grid: { color: '#30363d' }
+                        },
+                        y: { 
+                            ticks: { color: '#8b949e' },
+                            grid: { color: '#30363d' }
+                        }
+                    }
+                }
+            });
+
+            // Hate Distribution Chart
+            const hateDistCtx = document.getElementById('hateDistributionChart').getContext('2d');
+            charts.hateDistribution = new Chart(hateDistCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Hate Speech', 'Offensive', 'Normal'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: ['#da3633', '#d29922', '#238636'],
+                        borderWidth: 2,
+                        borderColor: '#21262d'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#8b949e' }
+                        }
+                    }
+                }
+            });
+
+            // Sentiment Chart
+            const sentimentCtx = document.getElementById('sentimentChart').getContext('2d');
+            charts.sentiment = new Chart(sentimentCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Positive', 'Negative', 'Neutral'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: ['#1f6feb', '#ff6b6b', '#8b949e'],
+                        borderWidth: 1,
+                        borderColor: '#30363d'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { 
+                            ticks: { color: '#8b949e' },
+                            grid: { color: '#30363d' }
+                        },
+                        y: { 
+                            ticks: { color: '#8b949e' },
+                            grid: { color: '#30363d' }
+                        }
+                    }
+                }
+            });
+
+            // Subreddit Chart
+            const subredditCtx = document.getElementById('subredditChart').getContext('2d');
+            charts.subreddit = new Chart(subredditCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: '#ff6b6b',
+                        borderWidth: 1,
+                        borderColor: '#30363d'
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // 🔁 This enables horizontal bars
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#8b949e' },
+                            grid: { color: '#30363d' }
+                        },
+                        y: {
+                            ticks: { color: '#8b949e' },
+                            grid: { color: '#30363d' }
+                        }
+                    }
+                }
+            });
+
+
+            // Swear Words Chart
+            const swearCtx = document.getElementById('swearWordsChart').getContext('2d');
+            charts.swearWords = new Chart(swearCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: '#da3633',
+                        borderWidth: 1,
+                        borderColor: '#30363d'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { 
+                            ticks: { color: '#8b949e' },
+                            grid: { color: '#30363d' }
+                        },
+                        y: { 
+                            ticks: { color: '#8b949e' },
+                            grid: { color: '#30363d' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Utility functions
         function escapeHtml(text) {
             if (!text) return '';
-            var map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, m => map[m]);
         }
-        function highlightSwears(text, swears) {
+
+        function highlightSwears(text) {
             if (!text) return '';
-            let re = new RegExp('\\b(' + swears.join('|') + ')\\b', 'gi');
-            return text.replace(re, '<span class="swear">$1</span>');
+            let result = escapeHtml(text);
+            swearWords.forEach(word => {
+                const regex = new RegExp(`\\b${word}\\b`, 'gi');
+                result = result.replace(regex, `<span class="swear-word">${word}</span>`);
+            });
+            return result;
         }
-        let swearWords = ["fuck", "shit", "bitch", "asshole", "bastard", "damn", "crap", "dick", "piss", "slut", "whore", "fag", "cunt", "bollocks", "bugger", "arse", "wanker", "prick", "twat", "slag"];
-        function updatePosts() {
-            fetch('/api/posts').then(r => r.json()).then(posts => {
-                let tbody = document.querySelector('#posts tbody');
-                tbody.innerHTML = '';
-                posts.forEach(post => {
-                    let desc = highlightSwears(escapeHtml(post.description||''), swearWords);
-                    let title = highlightSwears(escapeHtml(post.title||''), swearWords);
-                    let row = `<tr><td>${post.created_utc ? new Date(post.created_utc*1000).toLocaleString() : ''}</td><td><span class="tag subreddit">${escapeHtml(post.subreddit||'')}</span></td><td><span class="user">${escapeHtml(post.author||'')}</span></td><td>${title}</td><td>${desc}</td></tr>`;
-                    tbody.innerHTML += row;
+
+        function getHateCategory(label) {
+            if (!label) return 'normal';
+            const lowerLabel = label.toLowerCase();
+            if (lowerLabel.includes('hate')) return 'hate';
+            if (lowerLabel.includes('offensive')) return 'offensive';
+            return 'normal';
+        }
+
+        function getSentimentCategory(label) {
+            if (!label) return 'neutral';
+            const lowerLabel = label.toLowerCase();
+            if (lowerLabel.includes('pos')) return 'positive';
+            if (lowerLabel.includes('neg')) return 'negative';
+            return 'neutral';
+        }
+
+        // Data fetching functions
+        async function fetchPosts() {
+            try {
+                const response = await fetch('/api/posts');
+                const data = await response.json();
+                posts = data || [];
+                updateStatistics();
+                updateCharts();
+                renderPosts();
+                updateFilters();
+            } catch (error) {
+                console.error('Error fetching posts:', error);
+            }
+        }
+
+        async function fetchStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
+                updateSwearWordsChart(stats.top_swears || []);
+                updateSubredditChart(stats.top_subreddits || []);
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+            }
+        }
+
+        // Update functions
+        function updateStatistics() {
+            const total = posts.length;
+            const hateCount = posts.filter(p => getHateCategory(p.hate_label) === 'hate').length;
+            const offensiveCount = posts.filter(p => getHateCategory(p.hate_label) === 'offensive').length;
+            const normalCount = posts.filter(p => getHateCategory(p.hate_label) === 'normal').length;
+            
+            const sentimentScores = posts.map(p => p.sentiment_score || 0).filter(s => s !== 0);
+            const avgSentiment = sentimentScores.length > 0 
+                ? (sentimentScores.reduce((a, b) => a + b, 0) / sentimentScores.length).toFixed(2)
+                : '0.0';
+            
+            const uniqueSubreddits = new Set(posts.map(p => p.subreddit)).size;
+
+            document.getElementById('totalPosts').textContent = total;
+            document.getElementById('hatePosts').textContent = hateCount;
+            document.getElementById('offensivePosts').textContent = offensiveCount;
+            document.getElementById('normalPosts').textContent = normalCount;
+            document.getElementById('avgSentiment').textContent = avgSentiment;
+            document.getElementById('activeSubreddits').textContent = uniqueSubreddits;
+        }
+
+        function updateCharts() {
+            updateTimeSeriesChart();
+            updateHateDistributionChart();
+            updateSentimentChart();
+        }
+
+        function updateTimeSeriesChart() {
+            const timeData = {};
+            const now = new Date();
+            const hoursBack = currentTimeRange === '1h' ? 1 : currentTimeRange === '6h' ? 6 : 24;
+            
+            for (let i = hoursBack; i >= 0; i--) {
+                const time = new Date(now - i * 60 * 60 * 1000);
+                const label = time.getHours().toString().padStart(2, '0') + ':00';
+                timeData[label] = { hate: 0, offensive: 0, normal: 0 };
+            }
+
+            posts.forEach(post => {
+                const postTime = new Date(post.created_utc * 1000);
+                const hourLabel = postTime.getHours().toString().padStart(2, '0') + ':00';
+                if (timeData[hourLabel]) {
+                    const category = getHateCategory(post.hate_label);
+                    timeData[hourLabel][category]++;
+                }
+            });
+
+            charts.timeSeries.data.labels = Object.keys(timeData);
+            charts.timeSeries.data.datasets[0].data = Object.values(timeData).map(d => d.hate);
+            charts.timeSeries.data.datasets[1].data = Object.values(timeData).map(d => d.offensive);
+            charts.timeSeries.data.datasets[2].data = Object.values(timeData).map(d => d.normal);
+            charts.timeSeries.update();
+        }
+
+        function updateHateDistributionChart() {
+            const hateCount = posts.filter(p => getHateCategory(p.hate_label) === 'hate').length;
+            const offensiveCount = posts.filter(p => getHateCategory(p.hate_label) === 'offensive').length;
+            const normalCount = posts.filter(p => getHateCategory(p.hate_label) === 'normal').length;
+
+            charts.hateDistribution.data.datasets[0].data = [hateCount, offensiveCount, normalCount];
+            charts.hateDistribution.update();
+        }
+
+        function updateSentimentChart() {
+            const positiveCount = posts.filter(p => getSentimentCategory(p.sentiment_label) === 'positive').length;
+            const negativeCount = posts.filter(p => getSentimentCategory(p.sentiment_label) === 'negative').length;
+            const neutralCount = posts.filter(p => getSentimentCategory(p.sentiment_label) === 'neutral').length;
+
+            charts.sentiment.data.datasets[0].data = [positiveCount, negativeCount, neutralCount];
+            charts.sentiment.update();
+        }
+
+        function updateSubredditChart(subredditData) {
+            const labels = subredditData.slice(0, 10).map(item => item[0]);
+            const data = subredditData.slice(0, 10).map(item => item[1]);
+
+            charts.subreddit.data.labels = labels;
+            charts.subreddit.data.datasets[0].data = data;
+            charts.subreddit.update();
+        }
+
+        function updateSwearWordsChart(swearData) {
+            const labels = swearData.slice(0, 10).map(item => item[0]);
+            const data = swearData.slice(0, 10).map(item => item[1]);
+
+            charts.swearWords.data.labels = labels;
+            charts.swearWords.data.datasets[0].data = data;
+            charts.swearWords.update();
+        }
+
+        function renderPosts() {
+            const container = document.getElementById('postsContainer');
+            const filteredPosts = filterPosts();
+
+            if (filteredPosts.length === 0) {
+                container.innerHTML = '<div class="loading">No posts match the current filters</div>';
+                return;
+            }
+
+            container.innerHTML = filteredPosts.slice(0, 50).map(post => {
+                const hateCategory = getHateCategory(post.hate_label);
+                const sentimentCategory = getSentimentCategory(post.sentiment_label);
+                const timeAgo = getTimeAgo(post.created_utc);
+
+                return `
+                    <div class="post-item">
+                        <div class="post-header">
+                            <div class="post-meta">
+                                <span><i class="fas fa-clock"></i> ${timeAgo}</span>
+                                <span><i class="fas fa-hashtag"></i> <span class="subreddit-mention">r/${escapeHtml(post.subreddit || 'unknown')}</span></span>
+                                <span><i class="fas fa-user"></i> <span class="user-mention">u/${escapeHtml(post.author || 'unknown')}</span></span>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            ${post.title ? `<div class="post-title">${highlightSwears(post.title)}</div>` : ''}
+                            <div class="post-description">${highlightSwears(post.description || '').substring(0, 300)}${(post.description || '').length > 300 ? '...' : ''}</div>
+                        </div>
+                        <div class="tags">
+                            <span class="tag ${hateCategory}">${hateCategory.toUpperCase()}</span>
+                            <span class="tag ${sentimentCategory}">${sentimentCategory.toUpperCase()}</span>
+                            ${post.hate_score ? `<span class="tag" style="background: #666;">Hate: ${(post.hate_score * 100).toFixed(1)}%</span>` : ''}
+                            ${post.sentiment_score ? `<span class="tag" style="background: #666;">Sentiment: ${(post.sentiment_score * 100).toFixed(1)}%</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filterPosts() {
+            let filtered = posts;
+
+            // Filter by hate category
+            if (currentFilter !== 'all') {
+                filtered = filtered.filter(post => getHateCategory(post.hate_label) === currentFilter);
+            }
+
+            // Filter by subreddit
+            const subredditFilter = document.getElementById('subredditFilter').value;
+            if (subredditFilter !== 'all') {
+                filtered = filtered.filter(post => post.subreddit === subredditFilter);
+            }
+
+            // Filter by sentiment
+            const sentimentFilter = document.getElementById('sentimentFilter').value;
+            if (sentimentFilter !== 'all') {
+                filtered = filtered.filter(post => getSentimentCategory(post.sentiment_label) === sentimentFilter);
+            }
+
+            return filtered.sort((a, b) => (b.created_utc || 0) - (a.created_utc || 0));
+        }
+
+        function updateFilters() {
+            const subredditSelect = document.getElementById('subredditFilter');
+            const currentSubreddits = [...new Set(posts.map(p => p.subreddit))].filter(Boolean);
+            
+            const currentValue = subredditSelect.value;
+            subredditSelect.innerHTML = '<option value="all">All Subreddits</option>';
+            
+            currentSubreddits.forEach(subreddit => {
+                const option = document.createElement('option');
+                option.value = subreddit;
+                option.textContent = `r/${subreddit}`;
+                subredditSelect.appendChild(option);
+            });
+            
+            if (currentSubreddits.includes(currentValue)) {
+                subredditSelect.value = currentValue;
+            }
+        }
+
+        function getTimeAgo(timestamp) {
+            if (!timestamp) return 'Unknown';
+            const now = Date.now() / 1000;
+            const diff = now - timestamp;
+            
+            if (diff < 60) return 'Just now';
+            if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+            if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+            return `${Math.floor(diff / 86400)}d ago`;
+        }
+
+        // Control functions
+        function toggleFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.section-controls .control-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            renderPosts();
+        }
+
+        function toggleTimeRange(range) {
+            currentTimeRange = range;
+            document.querySelectorAll('.section-controls .control-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            updateTimeSeriesChart();
+        }
+
+        // Event listeners
+        document.getElementById('subredditFilter').addEventListener('change', renderPosts);
+        document.getElementById('sentimentFilter').addEventListener('change', renderPosts);
+
+        // Real-time updates
+        function showRealTimeIndicator() {
+            const indicator = document.getElementById('realTimeIndicator');
+            indicator.style.display = 'block';
+            setTimeout(() => {
+                indicator.style.display = 'none';
+            }, 2000);
+        }
+
+        // Auto-refresh functionality
+        function startAutoRefresh() {
+            setInterval(() => {
+                fetchPosts();
+                fetchStats();
+                showRealTimeIndicator();
+            }, 5000); // Update every 5 seconds
+        }
+
+        // Initialize dashboard
+        function initializeDashboard() {
+            initializeCharts();
+            fetchPosts();
+            fetchStats();
+            startAutoRefresh();
+        }
+
+        // Advanced features
+        function generateInsights() {
+            const insights = [];
+            
+            if (posts.length === 0) return insights;
+
+            const hatePercentage = (posts.filter(p => getHateCategory(p.hate_label) === 'hate').length / posts.length * 100).toFixed(1);
+            if (hatePercentage > 20) {
+                insights.push(`⚠️ High hate speech detected: ${hatePercentage}% of posts contain hate speech`);
+            }
+
+            const recentPosts = posts.filter(p => Date.now() / 1000 - p.created_utc < 3600);
+            if (recentPosts.length > 10) {
+                insights.push(`📈 High activity: ${recentPosts.length} posts in the last hour`);
+            }
+
+            const subredditCounts = {};
+            posts.forEach(p => {
+                if (p.subreddit) {
+                    subredditCounts[p.subreddit] = (subredditCounts[p.subreddit] || 0) + 1;
+                }
+            });
+            
+            const topSubreddit = Object.entries(subredditCounts).sort((a, b) => b[1] - a[1])[0];
+            if (topSubreddit && topSubreddit[1] > 5) {
+                insights.push(`🔥 Most active subreddit: r/${topSubreddit[0]} with ${topSubreddit[1]} posts`);
+            }
+
+            return insights;
+        }
+
+        function addInsightsPanel() {
+            const insights = generateInsights();
+            if (insights.length === 0) return;
+
+            const insightsHTML = `
+                <div class="dashboard-section full-width" style="background: linear-gradient(135deg, #1a1d23 0%, #2d1b69 100%); border: 1px solid #4c1d95;">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <i class="fas fa-lightbulb"></i>
+                            AI Insights
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+                        ${insights.map(insight => `
+                            <div style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--accent-color);">
+                                ${insight}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            const container = document.querySelector('.main-container');
+            container.insertAdjacentHTML('afterbegin', insightsHTML);
+        }
+
+        // Export functionality
+        function exportData() {
+            const data = {
+                timestamp: new Date().toISOString(),
+                posts: posts,
+                summary: {
+                    total: posts.length,
+                    hate: posts.filter(p => getHateCategory(p.hate_label) === 'hate').length,
+                    offensive: posts.filter(p => getHateCategory(p.hate_label) === 'offensive').length,
+                    normal: posts.filter(p => getHateCategory(p.hate_label) === 'normal').length
+                }
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `reddit-hate-speech-data-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch (e.key) {
+                    case 'r':
+                        e.preventDefault();
+                        fetchPosts();
+                        fetchStats();
+                        break;
+                    case 'e':
+                        e.preventDefault();
+                        exportData();
+                        break;
+                }
+            }
+        });
+
+        // Enhanced error handling
+        window.addEventListener('error', (e) => {
+            console.error('Dashboard error:', e.error);
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = `
+                position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+                background: var(--danger-color); color: white; padding: 1rem 2rem;
+                border-radius: 8px; z-index: 2000; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            `;
+            errorDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Dashboard Error: ${e.error?.message || 'Unknown error'}`;
+            document.body.appendChild(errorDiv);
+            setTimeout(() => errorDiv.remove(), 5000);
+        });
+
+        // Performance monitoring
+        let performanceMetrics = {
+            loadTime: 0,
+            updateCount: 0,
+            errorCount: 0
+        };
+
+        function trackPerformance() {
+            performanceMetrics.loadTime = performance.now();
+            setInterval(() => {
+                console.log('Dashboard Performance:', performanceMetrics);
+            }, 30000);
+        }
+
+        // Initialize everything when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            trackPerformance();
+            initializeDashboard();
+            
+            // Add insights after initial data load
+            setTimeout(() => {
+                addInsightsPanel();
+            }, 2000);
+        });
+
+        // Add tooltips for better UX
+        function addTooltips() {
+            const tooltipElements = document.querySelectorAll('[data-tooltip]');
+            tooltipElements.forEach(el => {
+                el.addEventListener('mouseenter', (e) => {
+                    const tooltip = document.createElement('div');
+                    tooltip.className = 'tooltip';
+                    tooltip.textContent = e.target.getAttribute('data-tooltip');
+                    tooltip.style.cssText = `
+                        position: absolute; background: var(--tertiary-bg); color: var(--primary-text);
+                        padding: 0.5rem; border-radius: 4px; font-size: 0.8rem; z-index: 1000;
+                        border: 1px solid var(--border-color); box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                        pointer-events: none; white-space: nowrap;
+                    `;
+                    document.body.appendChild(tooltip);
+                    
+                    const rect = e.target.getBoundingClientRect();
+                    tooltip.style.left = rect.left + 'px';
+                    tooltip.style.top = (rect.bottom + 5) + 'px';
+                });
+                
+                el.addEventListener('mouseleave', () => {
+                    const tooltip = document.querySelector('.tooltip');
+                    if (tooltip) tooltip.remove();
                 });
             });
         }
-        function updateStats() {
-            fetch('/api/stats').then(r => r.json()).then(stats => {
-                let users = document.querySelector('#users tbody');
-                users.innerHTML = '';
-                stats.top_users.forEach(([user, count], i) => {
-                    users.innerHTML += `<tr><td><i class="fa fa-user"></i> <span class="user">${escapeHtml(user)}</span></td><td>${count}</td></tr>`;
-                });
-                let swears = document.querySelector('#swears tbody');
-                swears.innerHTML = '';
-                stats.top_swears.forEach(([word, count]) => {
-                    swears.innerHTML += `<tr><td><span class="swear">${escapeHtml(word)}</span></td><td>${count}</td></tr>`;
-                });
-                let subreddits = document.querySelector('#subreddits tbody');
-                subreddits.innerHTML = '';
-                stats.top_subreddits.forEach(([sub, count]) => {
-                    subreddits.innerHTML += `<tr><td><span class="tag subreddit">${escapeHtml(sub)}</span></td><td>${count}</td></tr>`;
-                });
-            });
-        }
-        setInterval(updatePosts, 5000);
-        setInterval(updateStats, 5000);
-        updatePosts();
-        updateStats();
+
+        // Call addTooltips after DOM is ready
+        setTimeout(addTooltips, 1000);
     </script>
+
 </body>
+
 </html>
