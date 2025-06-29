@@ -1,0 +1,8 @@
+kafka-python
+elasticsearch
+fastapi
+uvicorn
+python-dotenv
+transformers
+praw
+jinja2

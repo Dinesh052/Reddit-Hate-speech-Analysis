@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Reddit Hate Speech Dashboard</title>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Roboto', Arial, sans-serif; margin: 0; background: #23272f; color: #f4f4f4; }
+        header { background: #b71c1c; padding: 1.5em 2em; text-align: center; box-shadow: 0 2px 8px #0002; }
+        h1 { margin: 0; font-size: 2.5em; letter-spacing: 2px; color: #fff; }
+        .container { max-width: 1200px; margin: 2em auto; padding: 2em; background: #292d36; border-radius: 16px; box-shadow: 0 4px 24px #0004; }
+        .section { margin-bottom: 2.5em; }
+        .flex { display: flex; gap: 2em; }
+        .card { background: #23272f; border-radius: 12px; box-shadow: 0 2px 8px #0002; padding: 1.5em; flex: 1; }
+        table { border-collapse: collapse; width: 100%; background: transparent; }
+        th, td { border: none; padding: 10px 8px; text-align: left; }
+        th { background: #b71c1c; color: #fff; font-weight: 700; border-radius: 6px 6px 0 0; }
+        tr { background: #23272f; transition: background 0.2s; }
+        tr:hover { background: #33384a; }
+        tr:nth-child(even) { background: #292d36; }
+        .leaderboard th, .swears th, .subreddits th { background: #23272f; color: #b71c1c; border-bottom: 2px solid #b71c1c; }
+        .tag { display: inline-block; background: #b71c1c; color: #fff; border-radius: 8px; padding: 2px 10px; font-size: 0.9em; margin-right: 4px; }
+        .user { font-weight: 700; color: #ffb300; }
+        .swear { color: #ff5252; font-weight: 700; }
+        .subreddit { color: #64b5f6; font-weight: 700; }
+        .scroll-table { max-height: 350px; overflow-y: auto; display: block; }
+        .icon { margin-right: 6px; }
+        @media (max-width: 900px) {
+            .flex { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1><i class="fab fa-reddit icon"></i>Reddit Hate Speech Dashboard</h1>
+    </header>
+    <div class="container">
+        <div class="section">
+            <h2><i class="fa fa-bolt icon"></i> Live Reddit Posts</h2>
+            <div class="scroll-table">
+            <table id="posts">
+                <thead>
+                    <tr><th>Time</th><th>Subreddit</th><th>User</th><th>Title</th><th>Description</th></tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            </div>
+        </div>
+        <div class="section flex">
+            <div class="card leaderboard">
+                <h2><i class="fa fa-crown icon"></i>Top Swearing Users</h2>
+                <div class="scroll-table">
+                <table id="users">
+                    <thead><tr><th>User</th><th>Swear Count</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+                </div>
+            </div>
+            <div class="card swears">
+                <h2><i class="fa fa-skull-crossbones icon"></i>Most Used Swear Words</h2>
+                <div class="scroll-table">
+                <table id="swears">
+                    <thead><tr><th>Word</th><th>Count</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+                </div>
+            </div>
+            <div class="card subreddits">
+                <h2><i class="fa fa-hashtag icon"></i>Top Subreddits</h2>
+                <div class="scroll-table">
+                <table id="subreddits">
+                    <thead><tr><th>Subreddit</th><th>Posts</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function escapeHtml(text) {
+            if (!text) return '';
+            var map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+        function highlightSwears(text, swears) {
+            if (!text) return '';
+            let re = new RegExp('\\b(' + swears.join('|') + ')\\b', 'gi');
+            return text.replace(re, '<span class="swear">$1</span>');
+        }
+        let swearWords = ["fuck", "shit", "bitch", "asshole", "bastard", "damn", "crap", "dick", "piss", "slut", "whore", "fag", "cunt", "bollocks", "bugger", "arse", "wanker", "prick", "twat", "slag"];
+        function updatePosts() {
+            fetch('/api/posts').then(r => r.json()).then(posts => {
+                let tbody = document.querySelector('#posts tbody');
+                tbody.innerHTML = '';
+                posts.forEach(post => {
+                    let desc = highlightSwears(escapeHtml(post.description||''), swearWords);
+                    let title = highlightSwears(escapeHtml(post.title||''), swearWords);
+                    let row = `<tr><td>${post.created_utc ? new Date(post.created_utc*1000).toLocaleString() : ''}</td><td><span class="tag subreddit">${escapeHtml(post.subreddit||'')}</span></td><td><span class="user">${escapeHtml(post.author||'')}</span></td><td>${title}</td><td>${desc}</td></tr>`;
+                    tbody.innerHTML += row;
+                });
+            });
+        }
+        function updateStats() {
+            fetch('/api/stats').then(r => r.json()).then(stats => {
+                let users = document.querySelector('#users tbody');
+                users.innerHTML = '';
+                stats.top_users.forEach(([user, count], i) => {
+                    users.innerHTML += `<tr><td><i class="fa fa-user"></i> <span class="user">${escapeHtml(user)}</span></td><td>${count}</td></tr>`;
+                });
+                let swears = document.querySelector('#swears tbody');
+                swears.innerHTML = '';
+                stats.top_swears.forEach(([word, count]) => {
+                    swears.innerHTML += `<tr><td><span class="swear">${escapeHtml(word)}</span></td><td>${count}</td></tr>`;
+                });
+                let subreddits = document.querySelector('#subreddits tbody');
+                subreddits.innerHTML = '';
+                stats.top_subreddits.forEach(([sub, count]) => {
+                    subreddits.innerHTML += `<tr><td><span class="tag subreddit">${escapeHtml(sub)}</span></td><td>${count}</td></tr>`;
+                });
+            });
+        }
+        setInterval(updatePosts, 5000);
+        setInterval(updateStats, 5000);
+        updatePosts();
+        updateStats();
+    </script>
+</body>
+</html>
