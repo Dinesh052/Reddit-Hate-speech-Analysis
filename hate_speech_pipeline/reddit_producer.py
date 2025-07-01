@@ -5,8 +5,11 @@ from kafka import KafkaProducer
 from dotenv import load_dotenv
 from hate_speech_pipeline.config import Config
 import praw
+from dotenv import load_dotenv
+load_dotenv(dotenv_path=".env")
 
-load_dotenv()
+
+# load_dotenv()
 FETCH_INTERVAL = 10  # seconds
 
 # Reddit app credentials (read-only access)
@@ -14,6 +17,9 @@ REDDIT_CLIENT_ID = os.getenv("REDDIT_CLIENT_ID")
 REDDIT_SECRET = os.getenv("REDDIT_SECRET")
 REDDIT_USER_AGENT = os.getenv("REDDIT_USER_AGENT", "hate-speech-pipeline/0.1")
 
+print("DEBUG -- CLIENT_ID:", REDDIT_CLIENT_ID)
+print("DEBUG -- SECRET:", REDDIT_SECRET)
+print("DEBUG -- USER_AGENT:", REDDIT_USER_AGENT)
 # Public subreddits to fetch from
 SUBREDDITS = [
     "HateSpeechOnTheWeb", "OffensiveSpeech", "SwearNet", "SwearWords"

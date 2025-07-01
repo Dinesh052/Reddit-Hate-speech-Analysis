@@ -761,8 +761,8 @@
         function getHateCategory(label) {
             if (!label) return 'normal';
             const lowerLabel = label.toLowerCase();
-            if (lowerLabel.includes('hate')) return 'hate';
-            if (lowerLabel.includes('offensive')) return 'offensive';
+            if (lowerLabel === 'hate' || lowerLabel.includes('hate')) return 'hate';
+            if (lowerLabel === 'offensive') return 'offensive';
             return 'normal';
         }
 
