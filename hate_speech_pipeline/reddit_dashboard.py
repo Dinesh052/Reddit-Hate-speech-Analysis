@@ -83,9 +83,9 @@ def categorize_hate_speech(label: str) -> str:
     if not label:
         return "normal"
     label_lower = label.lower()
-    if "hate" in label_lower:
+    if "hate" in label_lower or "threat" in label_lower:
         return "hate"
-    elif "offensive" in label_lower:
+    elif "offensive" in label_lower or "toxic" in label_lower or "obscene" in label_lower:
         return "offensive"
     return "normal"
 
