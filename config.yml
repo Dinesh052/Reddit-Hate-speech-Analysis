@@ -27,4 +27,4 @@ Kafka:
 Elasticsearch:
   host: "localhost"
   port: 9200
-  index: "reddit_hate"
+  index: reddit_hate

@@ -16,7 +16,7 @@ REDDIT_USER_AGENT = os.getenv("REDDIT_USER_AGENT", "hate-speech-pipeline/0.1")
 
 # Public subreddits to fetch from
 SUBREDDITS = [
-    "HateSpeechOnTheWeb", "OffensiveSpeech", "SwearNet", "SwearWords"
+    "RoastMe", "OffensiveSpeech", "memes", "SwearWords"
 ]
 
 def fetch_reddit_posts(reddit, subreddits):
