@@ -81,28 +81,44 @@ def get_time_range_filter(time_range: str) -> Optional[datetime]:
 
 def categorize_hate_speech(label: str) -> str:
     if not label:
-        return "normal"
+        return "neutral"
     label_lower = label.lower()
+
+    if "hate" in label_lower:
+
     if "hate" in label_lower or "threat" in label_lower:
+
         return "hate"
     elif "offensive" in label_lower or "toxic" in label_lower or "obscene" in label_lower:
         return "offensive"
     return "normal"
 
+    if label.lower() in ["hate", "offensive", "neutral"]:
+        return label.lower()
+    return "neutral"
+    # if "hate" in label_lower or "threat" in label_lower:
+    #     return "hate"
+    # elif "offensive" in label_lower or "toxic" in label_lower or "obscene" in label_lower:
+    #     return "offensive"
+    # return "neutral"
+
+
 def categorize_sentiment(label: str) -> str:
     if not label:
         return "neutral"
     label_lower = label.lower()
-    if "pos" in label_lower:
+    if label_lower in ["positive", "label_2"]:
         return "positive"
-    elif "neg" in label_lower:
+    elif label_lower in ["negative", "label_0"]:
         return "negative"
+    elif label_lower in ["neutral", "label_1"]:
+        return "neutral"
     return "neutral"
 
 def extract_swear_words(text: str) -> List[str]:
     if not text:
         return []
-    words = re.findall(r'\\b\\w+\\b', text.lower())
+    words = re.findall(r'\b\w+\b', text.lower())
     return [word for word in words if word in SWEAR_WORDS]
 
 def generate_insights(posts: List[Dict]) -> List[Dict]:
@@ -201,11 +217,8 @@ async def get_posts(
                 query["bool"]["must"].append({"wildcard": {"hate_label": "*hate*"}})
             elif hate_category == "offensive":
                 query["bool"]["must"].append({"wildcard": {"hate_label": "*offensive*"}})
-            elif hate_category == "normal":
-                query["bool"]["must_not"] = [
-                    {"wildcard": {"hate_label": "*hate*"}},
-                    {"wildcard": {"hate_label": "*offensive*"}}
-                ]
+            elif hate_category == "neutral":
+                query["bool"]["must"].append({"wildcard": {"hate_label": "*neutral*"}})
         res = es.search(
             index=INDEX, 
             body={"query": query},
@@ -250,12 +263,12 @@ async def get_stats(time_range: str = "24h"):
             "time_range": time_range,
             "last_updated": datetime.now().isoformat()
         }
-        hate_counts = {"hate": 0, "offensive": 0, "normal": 0}
+        hate_counts = {"hate": 0, "offensive": 0, "neutral": 0}
         sentiment_counts = {"positive": 0, "negative": 0, "neutral": 0}
         subreddit_counts = Counter()
         user_swear_counts = Counter()
         swear_word_counts = Counter()
-        hourly_counts = defaultdict(lambda: {"hate": 0, "offensive": 0, "normal": 0})
+        hourly_counts = defaultdict(lambda: {"hate": 0, "offensive": 0, "neutral": 0})
         for post in posts:
             hate_cat = categorize_hate_speech(post.get("hate_label"))
             hate_counts[hate_cat] += 1

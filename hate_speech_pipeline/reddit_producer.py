@@ -22,7 +22,7 @@ print("DEBUG -- SECRET:", REDDIT_SECRET)
 print("DEBUG -- USER_AGENT:", REDDIT_USER_AGENT)
 # Public subreddits to fetch from
 SUBREDDITS = [
-    "HateSpeechOnTheWeb", "OffensiveSpeech", "SwearNet", "SwearWords"
+    "RoastMe", "OffensiveSpeech", "memes", "SwearWords"
 ]
 
 def fetch_reddit_posts(reddit, subreddits):
