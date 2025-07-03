@@ -80,9 +80,20 @@ README.md
 
 4. **Start the services with Docker:**
 
-   ```sh
+   1st terminal
    docker-compose up --build
-   ```
+   
+   2nd terminal 
+   python -m hate_speech_pipeline.reddit_producer
+
+   3nd terminal
+   python -m hate_speech_pipeline.reddit_consumer
+
+   4th terminal
+   python -m hate_speech_pipeline.reddit_dashboard
+
+   5th terminal
+   uvicorn hate_speech_pipeline.reddit_dashboard:app --reload
 
 5. **Run the pipeline:**
    - Start the Reddit and news producer/consumer scripts as needed.
@@ -107,6 +118,6 @@ README.md
 
 ---
 
-## License
+## License MMM
 
 MIT License

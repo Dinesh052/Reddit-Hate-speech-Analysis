@@ -83,13 +83,16 @@ def categorize_hate_speech(label: str) -> str:
     if not label:
         return "neutral"
     label_lower = label.lower()
-<<<<<<< Updated upstream
+
     if "hate" in label_lower:
+
+    if "hate" in label_lower or "threat" in label_lower:
+
         return "hate"
-    elif "offensive" in label_lower:
+    elif "offensive" in label_lower or "toxic" in label_lower or "obscene" in label_lower:
         return "offensive"
     return "normal"
-=======
+
     if label.lower() in ["hate", "offensive", "neutral"]:
         return label.lower()
     return "neutral"
@@ -98,7 +101,7 @@ def categorize_hate_speech(label: str) -> str:
     # elif "offensive" in label_lower or "toxic" in label_lower or "obscene" in label_lower:
     #     return "offensive"
     # return "neutral"
->>>>>>> Stashed changes
+
 
 def categorize_sentiment(label: str) -> str:
     if not label:

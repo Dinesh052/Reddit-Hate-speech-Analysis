@@ -6,3 +6,4 @@ python-dotenv
 transformers
 praw
 jinja2
+torch 
